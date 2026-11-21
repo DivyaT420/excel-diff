@@ -49,8 +49,19 @@ if "result" in st.session_state:
             rows.append([d["sheet"], d["cell"], d["oldFormula"] or "no formula", d["newFormula"] or "no formula", "Formula"])
 
     df = pd.DataFrame(rows, columns=["Sheet", "Cell", "Old Value", "New Value", "Type"])
-    colors = {"Added": "#dcfce7", "Removed": "#fee2e2", "Modified": "#fef9c3", "Formula": "#f3e8ff"}
-    styled = df.style.apply(lambda r: [f"background-color: {colors.get(r['Type'], '')}" if c == "Type" else "" for c in df.columns], axis=1)
+    # (background, text) pairs: explicit dark text so it stays readable in dark mode too
+    colors = {
+        "Added":    ("#dcfce7", "#166534"),
+        "Removed":  ("#fee2e2", "#991b1b"),
+        "Modified": ("#fef9c3", "#854d0e"),
+        "Formula":  ("#f3e8ff", "#6b21a8"),
+    }
+
+    def style_type(val):
+        bg, fg = colors.get(val, ("", ""))
+        return f"background-color: {bg}; color: {fg}; font-weight: 600" if bg else ""
+
+    styled = df.style.map(style_type, subset=["Type"])
 
     st.caption(f"{len(df)} rows")
     st.dataframe(styled, use_container_width=True, hide_index=True)
